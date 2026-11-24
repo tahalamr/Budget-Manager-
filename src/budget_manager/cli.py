@@ -10,9 +10,8 @@ Examples (run from the project folder):
   python run.py import data/sample_transactions.csv
   python run.py --help
 """
-# Tools included with Python (no installation needed).
-import argparse  # Reads commands and arguments typed in the terminal.
-import sys       # Lets us stop the program with an error code.
+import argparse
+import sys
 
 from . import services, storage
 from .models import CATEGORIES, CURRENCIES, KINDS
@@ -22,18 +21,12 @@ DEFAULT_FILE = "transactions.json"
 
 
 def build_parser():
-    # A parser is an object that understands our command-line instructions.
-    # argparse also provides --help automatically.
     parser = argparse.ArgumentParser(description="Personal Budget Manager")
     parser.add_argument("--file", default=DEFAULT_FILE,
                         help=f"data file to use (default: {DEFAULT_FILE})")
 
-    # Subparsers let the program accept different commands.
-    # dest="command" stores the chosen command in args.command.
-    # required=True means the user must choose one.
     commands = parser.add_subparsers(dest="command", required=True)
 
-    # add: python run.py add 2026-09-04 expense food 18.50
     add = commands.add_parser("add", help="record a transaction")
     add.add_argument("date", help="YYYY-MM-DD")
     add.add_argument("kind", help="/".join(KINDS))
@@ -41,30 +34,24 @@ def build_parser():
     add.add_argument("amount", help="positive number, e.g. 18.50")
     add.add_argument("--currency", default="EUR", help="/".join(CURRENCIES))
 
-    # list: optional filters
     listing = commands.add_parser("list", help="show transactions")
     listing.add_argument("--kind")
     listing.add_argument("--category")
     listing.add_argument("--month", help="YYYY-MM")
 
-    # These commands need no extra arguments.
     commands.add_parser("summary", help="balance and expenses by category")
 
-    # backup needs a destination: the filename for the backup.
     backup = commands.add_parser("backup", help="copy the data to a new file")
     backup.add_argument("destination")
 
-    # import reads a CSV file and adds its valid rows.
     imp = commands.add_parser("import", help="add the valid rows of a CSV file")
     imp.add_argument("csv_file")
     return parser
 
 
 def run(args):
-    # Read the saved transactions (an empty list if the file does not exist yet).
     transactions = storage.load(args.file)
 
-    # Only one command block runs each time.
     if args.command == "add":
         transactions = services.add_transaction(
             transactions, args.date, args.kind, args.category,
@@ -109,7 +96,6 @@ def main(argv=None):
     try:
         run(args)
     except ValidationError as err:
-        # Actionable message, no traceback. Exit code 1 = something went wrong.
         print(f"Error: {err}")
         sys.exit(1)
     except FileExistsError:
